@@ -1,0 +1,137 @@
+function [MLUFS, SLUFS, ILUFS] = LUFSvR128l (audio,Fs)
+
+% babsic LUFS new anro type program
+% 4/2/14
+
+%split audio into channels
+audioleft = audio(:,1);
+audioright = audio(:,2);
+
+%Define out filter coefficients
+stage1a = [-1.69095929318241, 0.73248077421585];
+stage1b = [1.53512485958697, -2.69169618940638, 1.19839281085285];
+stage2a = [-1.99004745483398, 0.99007225036621];
+stage2b = [1, -2, 1];
+
+% stereo filter stage 1
+fleft = filter(stage1b, stage1a, audioleft);
+fright = filter( stage1b, stage1a, audioright);
+
+% stereo filter stage 2
+fleft = filter(stage2b, stage2a, fleft);
+fright = filter(stage2b, stage2a, fright);
+
+% windowlength and overlap point
+windowlength = ((Fs/1000)*400);
+ols = windowlength / 100 * 25;
+
+% Momentary and Integrated 
+sb = 1;
+% windowing loop
+for a = 1 : ols : length(fleft)-windowlength;
+    yL(:,sb) = fleft(a:(a+windowlength));
+    sb = sb + 1;
+end
+
+sb = 1;
+% windowing loop
+for a = 1 : ols : length(fright)-windowlength;
+    yR(:,sb) = fright(a:(a+windowlength));
+    sb = sb + 1;
+end
+
+% Shortterm
+% windowlength and overlap point
+windowlengths = (Fs*3);
+olss = windowlength / 100 * 25;
+
+% Momentary and Integrated 
+sb = 1;
+% windowing loop
+for a = 1 : olss : length(fleft)-windowlengths;
+    syL(:,sb) = fleft(a:(a+windowlengths));
+    sb = sb + 1;
+end
+
+sb = 1;
+% windowing loop
+for a = 1 : olss : length(fright)-windowlengths;
+    syR(:,sb) = fright(a:(a+windowlengths));
+    sb = sb + 1;
+end
+
+% taking the power
+yLs = abs(yL);
+yRs = abs(yR);
+
+% taking the power
+syLs = abs(syL);
+syRs = abs(syR);
+
+
+% Taking the mean of each windown
+for a = 1 : 1 : min(size(yLs))
+    mLs(a) = mean(yLs(a)); 
+end
+for a = 1 : 1 : min(size(yRs))
+    mRs(a) = mean(yRs(a)); 
+end
+
+% Take Mono Sum
+for a = 1 : 1 : max(size(mLs))
+    mMs(a) = mLs(a)+ mRs(a);
+end
+
+% Taking the mean of each windown
+for a = 1 : 1 : min(size(syLs))
+    smLs(a) = mean(syLs(a)); 
+end
+for a = 1 : 1 : min(size(syRs))
+    smRs(a) = mean(syRs(a)); 
+end
+
+% Take Mono Sum
+for a = 1 : 1 : max(size(smLs))
+    smMs(a) = smLs(a)+ smRs(a);
+end
+
+% taking single average
+% tmMs = mean(abs(gtmMs));
+
+% Taking the db value for individual channels and mono
+for a = 1 : 1 : max(size(mLs))
+  mLdb(a) = -0.691 + 10*log10(mLs(a));
+end
+for a = 1 : 1 : max(size(mRs))
+  mRdb(a) = -0.691 + 10*log10(mRs(a));
+end
+for a = 1 : 1 : max(size(mMs))
+  mMdb(a) = -0.691 + 10*log10(mMs(a));
+end
+for a = 1 : 1 : max(size(mMs))
+  mgMdb(a) = -0.691 + 10*log10(mMs(a))-10;
+end
+for a = 1 : 1 : max(size(smMs))
+  smgMdb(a) = -0.691 + 10*log10(smMs(a));
+end
+
+% tmMdb = -0.691 + 10*log10(tmMs);
+
+% Gate for anything below -70
+sb = 1;
+for a = 1 : 1 : length(mgMdb);
+    if mgMdb(a) >= -70
+    gMa(sb) = mgMdb(a);
+    sb = sb + 1;
+    end
+end
+
+% append 10 gated values 
+for a = 1 : 1 : length(gMa)
+   gMat(a) = gMa(a) + 10;
+end
+
+MLUFS = mMdb;
+ILUFS = mean(gMat);
+SLUFS = smgMdb;
+end
