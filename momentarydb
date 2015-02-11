@@ -1,0 +1,26 @@
+function mMdb = momentarydb (msl, msr)
+
+for a = 1 : 1 : size(msl,2)
+    mml(a) = sum(msl(:,a));
+    mmr(a) = sum(msr(:,a));
+%   mMdb(a) = -0.691 + 10*log10(((1/266)* sum(msl(a))) + ((1/266))* sum(msr(a)));
+end
+
+% for a = 1 : 1 : length(mml)
+%     mll(a) = 1/266 * mml(a);
+%     mrr(a) = 1/266 * mmr(a);
+% end
+% 
+% for a = 1 : 1 : length(mll)
+%     amm(a)= mll(a) + mrr(a);
+% end
+
+for a = 1 : 1 : length(mml)
+    amm(a)= (((1/19201) * mml(a)) + ((1/19201) *mmr(a)));
+end
+
+
+for a = 1 : 1 : length(amm)
+    mMdb(a) = -0.691 + 10*log10(amm(a));
+end
+end
