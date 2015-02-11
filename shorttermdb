@@ -1,0 +1,22 @@
+function smgMdb = shorttermdb (ssl, ssr)
+
+% for a = 1 : 1 : max(size(smMs))
+%   smgMdb(a) = -0.691 + 10*log10(smMs(a));
+% end
+
+
+for a = 1 : 1 : size(ssl,2)
+    sml(a) = sum(ssl(:,a));
+    smr(a) = sum(ssr(:,a));
+end
+
+
+for a = 1 : 1 : length(sml)
+    asm(a)= (((1/144001) * sml(a)) + ((1/144001) *smr(a)));
+end
+
+
+for a = 1 : 1 : length(asm)
+    smgMdb(a) = -0.691 + 10*log10(asm(a));
+end
+end
