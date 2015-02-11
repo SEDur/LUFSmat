@@ -1,0 +1,35 @@
+
+% --------------------------------------------------------------------
+function LRA = LoudnessRange( ShortTermLoudness )
+% Input: ShortTermLoudness is a vector of loudness levels, computed
+% as specified in ITU-R BS.1770 without gating, using a sliding
+% analysis-window of length 3 s, overlap >= 2 s
+% Constants
+ABS_THRES = -70; % LUFS (= absolute measure)
+REL_THRES = -20; % LU (= relative measure)
+PRC_LOW = 10; % lower percentile
+PRC_HIGH = 95; % upper percentile
+% Apply the absolute-threshold gating
+abs_gate_vec = (ShortTermLoudness >= ABS_THRES);
+% abs_gate_vec is indices of loudness levels above absolute threshold
+stl_absgated_vec = ShortTermLoudness(abs_gate_vec);
+% only include loudness levels that are above gate threshold
+% Apply the relative-threshold gating (non-recursive definition)
+n = length(stl_absgated_vec);
+stl_power = sum(10.^(stl_absgated_vec./10))/n; % undo 10log10, and calculate mean
+stl_integrated = 10*log10(stl_power); % LUFS
+rel_gate_vec = (stl_absgated_vec >= stl_integrated + REL_THRES);
+% rel_gate_vec is indices of loudness levels above relative threshold
+stl_relgated_vec = stl_absgated_vec( rel_gate_vec );
+% only include loudness levels that are above gate threshold
+% Compute the high and low percentiles of the distribution of
+% values in stl_relgated_vec
+n = length(stl_relgated_vec);
+stl_sorted_vec = sort(stl_relgated_vec);
+% sort elements in ascending order
+stl_perc_low = stl_sorted_vec(round((n-1)*PRC_LOW/100 + 1));
+stl_perc_high = stl_sorted_vec(round((n-1)*PRC_HIGH/100 + 1));
+% Compute the Loudness Range measure
+LRA = stl_perc_high - stl_perc_low; % in LU
+
+end
