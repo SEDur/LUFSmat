@@ -1,0 +1,30 @@
+function [msl, msr] = momentarywindow (fleft, fright, Fs)
+% windowlength and overlap point
+windowlength = ((Fs/1000)*400);
+ols = windowlength / 100 * 25;
+
+% Momentary and Integrated 
+sb = 1;
+% windowing loop
+for a = 1 : ols : length(fleft)-windowlength;
+    yL(:,sb) = fleft(a:(a+windowlength));
+    sb = sb + 1;
+end
+
+sb = 1;
+% windowing loop
+for a = 1 : ols : length(fright)-windowlength;
+    yR(:,sb) = fright(a:(a+windowlength));
+    sb = sb + 1;
+end
+
+% taking the power
+% yLs = abs(yL);
+% yRs = abs(yR);
+
+yLs = yL .^2;
+yRs = yR .^2;
+
+msl = yLs;
+msr = yRs;
+end
