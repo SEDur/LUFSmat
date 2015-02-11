@@ -1,0 +1,166 @@
+function OLMASAv1
+% Define GUI figure
+lui =  figure('Visible','off','Units','Normalized','Position',[0.1,0.1,0.9,0.9],'Color',[0,0,0]);
+filepath = '';
+luiwelcometext1 = uicontrol('Style','text',...
+           'Visible', 'on',...
+           'FontSize',[8],...
+           'BackgroundColor',[0 0 0],...
+           'ForegroundColor',[1 1 1],...
+           'String','Offline Loudness Meter for Audio Sample Analysis v1',...
+           'units','normalized',...
+           'Position',[0,0.95,0.25,0.05]);
+       
+luiwelcometext2 = uicontrol('Style','text',...
+           'Visible', 'on',...
+           'FontSize',[10],...
+           'BackgroundColor',[0 0 0],...
+           'ForegroundColor',[1 1 1],...
+           'String','Analysis File',...
+           'units','normalized',...
+           'Position',[0,0.04,0.1,0.05]);
+       
+luifileselectbox = uicontrol('Style','edit',...
+           'Visible', 'on',...
+           'FontSize',[8],...
+           'BackgroundColor',[0.1 0.1 0.1],...
+           'ForegroundColor',[1 1 1],...
+           'String','File Path',...
+           'units','normalized',...
+           'Callback',{@fileselect_Callback},...
+           'Position',[0,0,0.4,0.05]);
+       
+luifselbut = uicontrol('Style','pushbutton',...
+             'Visible','on',...
+             'BackgroundColor',[0.25 0.25 0.25],...
+             'ForegroundColor',[1 1 1],...
+             'String','Select File','units','Normalized','Position',[0.1,0.05,0.1,0.05],...
+             'Callback',{@luifselbut_Callback}); 
+luiprocessbut = uicontrol('Style','pushbutton',...
+             'Visible','on',...
+             'BackgroundColor',[0.25 0.25 0.25],...
+             'ForegroundColor',[1 1 1],...
+             'TooltipString','Will take time to excecute',...
+             'BusyAction','queue',...
+             'String','Process','units','Normalized','Position',[0.2,0.05,0.1,0.05],...
+             'Callback',{@luiprocessbut_Callback});          
+
+function luifselbut_Callback(source,eventdata) 
+    [filename, pathname] = ...
+     uigetfile({'*.*';'*.wav';'*.mp3';'*.ogg';'*.flac';'*.au';'*.m4a';'*.mp4'},'File Selector');
+ filepath = strcat(pathname,filename);
+ set(luifileselectbox,'String',filepath);
+end
+
+% function fileselect_Callback(source,eventdata) 
+%     filepath = get.source('string');
+% end
+
+function luiprocessbut_Callback(source,eventdata) 
+set(luiprocessbut,'BackgroundColor',[1,0,0]);
+set(luifileselectbox,'BackgroundColor',[1,0,0]);
+percdone = 0;
+percdone
+refresh(lui);
+[audio,Fs] = audioread(filepath);
+if Fs < 48000
+    [audio,Fs] = resampler (audio, Fs);
+end
+if Fs > 48000
+    [audio,Fs] = resampler (audio, Fs);
+end
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0,1,0]);
+[fiL, fiR] = K_Filter (audio);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0,0,1]);
+[msl,msr] = momentarywindow (fiL, fiR, Fs);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[1,0,0]);
+[ssl, ssr] = shorttermwindow (fiL, fiR, Fs);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0,1,0]);
+mMs = momentarymean (msl, msr);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0,0,1]);
+smMs = shorttermmean (ssl, ssr);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[1,0,0]);
+MLUFS = momentarydb (msl, msr);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0.25,0.25,0.25]);
+SLUFS = shorttermdb (ssl, ssr);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[0.5,0.5,0.5]);
+ILUFS = intergrationgate (msl, msr)
+percdone = percdone + 10;
+percdone
+refresh(lui);
+set(luifileselectbox,'BackgroundColor',[1,1,1]);
+LRA = loudnessrange (SLUFS);
+percdone = percdone + 10;
+percdone
+refresh(lui);
+% [MLUFS,SLUFS,ILUFS] = LUFSvR128l(audio, Fs);    
+% Plots
+hold on;
+wavec = [0.05,0.8,0.9,0.1];
+subplot(4, 1, 1, 'Color',[1 1 1]);
+set(gca,'Color',[1 1 1]);
+title('Track');
+tp = linspace(0, length(audio)/Fs, length(audio));
+plot(tp, audio);
+wavec = [0.05,0.65,0.9,0.1];
+subplot(4, 1, 2, 'Color',[1 1 1]);
+set(gca,'Color',[1 1 1]);
+title('Momentary LUFS (per window)');
+tp = linspace(0, 1, length(MLUFS));
+plot(1:length(MLUFS), MLUFS);
+wavec = [0.05,0.5,0.9,0.1];
+subplot(4, 1, 3, 'Color',[1 1 1]);
+set(gca,'Color',[1 1 1]);
+title('Short Term LUFS (per window)');
+tp = linspace(0, 1, length(SLUFS));
+plot(1:length(SLUFS), SLUFS);
+wavec = [0.05,0.35,0.9,0.1];
+subplot(4, 1, 4, 'Color',[1 1 1]);
+set(gca,'Color',[1 1 1]);
+title('Intergrated LUFS (1 number, total)');
+tp = linspace(0, 1, length(ILUFS));
+plot(ILUFS, 1:length(ILUFS));
+hold off;
+refresh(lui);
+MLUFS;
+SLUFS;
+ILUFS
+LRA
+% set(lui,'Color',[1,1,1]);
+set(luifileselectbox,'BackgroundColor',[0,0,0]);
+set(luiprocessbut,'BackgroundColor',[0.25,0.25,0.25]);
+refresh(lui);
+end
+% Make the GUI visible.
+set(lui,'Visible','on'); 
+       
+% Assign the GUI a name to appear in the window title.
+set(lui,'Name','My Listening Test v 3.1');
+
+% Move the GUI to the center of the screen.
+movegui(lui,'center');
+end
