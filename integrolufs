@@ -1,0 +1,76 @@
+function integro = intergrationgate (msl, msr)
+
+% for a = 1 : 1 : max(size(mMs))
+%   mgMdb(a) = -0.691 + 10*log10(mMs(a));
+% end
+
+for a = 1 : 1 : size(msl,2)
+lj(a) = -0.691 + 10*log10((mean(msl(:,a))+ mean(msr(:,a))));
+end
+memset = 0;
+sb = 1;
+for a = 1 : 1 : length(lj)
+    if lj(a) > -70
+        memset(sb) = a;
+        sb = sb + 1;
+    end
+end
+
+for a = 1 : 1 : length(memset)
+    ljm(a) =  (1/length(msl(:,memset(a)))) * sum(msl(memset(:,a)));
+    rjm(a) =  (1/length(msr(:,memset(a)))) * sum(msr(memset(:,a)));
+end
+
+    ljsm = (1/length(ljm)) * sum (ljm);
+    rjsm = (1/length(rjm)) * sum (rjm);
+    
+rr = -0.691 + 10*log10 (ljsm + rjsm) - 10;
+
+memsetb = 0;
+sb = 1;
+for a = 1 : 1 : max(size(lj))
+    if lj(a) > rr
+        memsetb(sb) = a;
+        sb = sb + 1;
+    end
+end
+
+for a = 1 : 1 : length(memsetb)
+    ljmb(a) =  mean(msl(:,memsetb(a)));
+    rjmb(a) =  mean(msr(:,memsetb(a)));
+end
+
+    ljsmb = (1/length(ljmb)) * sum (ljmb);
+    rjsmb = (1/length(rjmb)) * sum (rjmb);
+    
+ integro = -0.691 + 10*log10 (ljsmb + rjsmb);
+ 
+% for a = 1 : 1 : max(size(mMs))
+%   mgMdb(a) = -0.691 + 10*log10(mMs(a));
+% end
+
+% sb = 1;
+% for a = 1 : 1 : length(mgMdb);
+%     if mgMdb(a) >= -70
+%     gMaa(sb) = mgMdb(a) -10;
+%     sb = sb + 1;
+%     end
+% end
+% sb = 1;
+% for a = 1 : 1 : length(gMaa);
+%     if mgMdb(a) >= gMaa(a)
+%     gMat(sb) = mgMdb(a);
+%     sb = sb + 1;
+%     end
+% end
+
+% if length(gMa) < 1
+%    gMa = mgMdb + 10;
+% end
+
+% append 10 gated values 
+% for a = 1 : 1 : length(gMa)
+%    gMat(a) = gMa(a) + 10;
+% end
+%     integro = mean(gMat);
+end
