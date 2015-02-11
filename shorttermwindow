@@ -1,0 +1,28 @@
+function [ssl, ssr] = shorttermwindow (fleft, fright, Fs)
+% Shortterm
+% windowlength and overlap point
+windowlengths = (Fs*3);
+olss = windowlengths / 100 * 25;
+
+% Momentary and Integrated 
+sb = 1;
+% windowing loop
+for a = 1 : olss : length(fleft)-windowlengths;
+    syL(:,sb) = fleft(a:(a+windowlengths));
+    sb = sb + 1;
+end
+
+sb = 1;
+% windowing loop
+for a = 1 : olss : length(fright)-windowlengths;
+    syR(:,sb) = fright(a:(a+windowlengths));
+    sb = sb + 1;
+end
+
+% taking the power
+syLs = syL .^2;
+syRs = syR .^2;
+
+ssl = syLs;
+ssr = syRs;
+end
